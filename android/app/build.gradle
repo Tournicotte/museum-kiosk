@@ -1,8 +1,17 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+}
+
+// Extract --dart-define values so native code can read them at build time.
+// Flutter encodes dart-defines as comma-separated base64 strings.
+def dartEnv = [:]
+if (project.hasProperty('dart-defines')) {
+    dartEnv = project.property('dart-defines').split(',').collectEntries { entry ->
+        def pair = new String(entry.decodeBase64(), 'UTF-8').split('=', 2)
+        pair.length == 2 ? [(pair[0]): pair[1]] : [:]
+    }
 }
 
 def localProperties = new Properties()
@@ -13,15 +22,8 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
-if (flutterVersionCode == null) {
-    flutterVersionCode = "1"
-}
-
-def flutterVersionName = localProperties.getProperty("flutter.versionName")
-if (flutterVersionName == null) {
-    flutterVersionName = "1.0"
-}
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
+def flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
     namespace = "ee.kaasan.museum_kiosk"
@@ -33,21 +35,32 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "ee.kaasan.museum_kiosk"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
+        // SumUp SDK 4.x requires minSdk 21.
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+
+        // Bake the SumUp affiliate key into the native build so SumUpPlugin.kt
+        // can call SumUpAPI.setup() without touching dart-define at runtime.
+        // Empty string in development — SumUpPaymentService is never used in dev.
+        buildConfigField "String", "SUMUP_AFFILIATE_KEY",
+            "\"${dartEnv.getOrDefault('SUMUP_AFFILIATE_KEY', '')}\""
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // TODO: Replace with production signing config before shipping.
             signingConfig = signingConfigs.debug
         }
     }
@@ -55,4 +68,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // SumUp in-app payments SDK.
+    // Repository declared in android/build.gradle (maven.sumup.com).
+    implementation 'com.sumup-merchant.api:android-sdk:4.2.0'
 }

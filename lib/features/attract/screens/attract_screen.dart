@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,11 +8,40 @@ import 'package:museum_kiosk/app/router.dart';
 import 'package:museum_kiosk/core/config/app_config.dart';
 import 'package:museum_kiosk/core/locale/locale_provider.dart';
 
-class AttractScreen extends ConsumerWidget {
+class AttractScreen extends ConsumerStatefulWidget {
   const AttractScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AttractScreen> createState() => _AttractScreenState();
+}
+
+class _AttractScreenState extends ConsumerState<AttractScreen> {
+  // 5-tap gesture on the hidden top-right corner opens the admin panel.
+  // The tap counter resets after 3 s of inactivity (kiosk-rules.mdc).
+  int _adminTaps = 0;
+  Timer? _tapResetTimer;
+
+  @override
+  void dispose() {
+    _tapResetTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onHiddenTap() {
+    _tapResetTimer?.cancel();
+    _adminTaps++;
+    if (_adminTaps >= 5) {
+      _adminTaps = 0;
+      context.go(KioskRoutes.admin);
+      return;
+    }
+    _tapResetTimer = Timer(const Duration(seconds: 3), () {
+      setState(() => _adminTaps = 0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final config = ref.watch(appConfigProvider);
     final currentLocale = ref.watch(localeProvider);
@@ -22,24 +53,29 @@ class AttractScreen extends ConsumerWidget {
       child: Scaffold(
         body: Stack(
           children: [
-            // Language selector — top right
+            // Hidden admin tap zone — top-right 80×80px, no visual indicator.
+            // 5 consecutive taps within 3 s opens the admin panel.
             Positioned(
-              top: 24,
-              right: 24,
-              child: _LanguageSelector(currentLocale: currentLocale, ref: ref),
-            ),
-
-            // Admin access — top left, unobtrusive
-            Positioned(
-              top: 24,
-              left: 24,
+              top: 0,
+              right: 0,
               child: GestureDetector(
-                onLongPress: () => context.go(KioskRoutes.admin),
-                child: const SizedBox(width: 60, height: 60),
+                behavior: HitTestBehavior.opaque,
+                onTap: _onHiddenTap,
+                child: const SizedBox(width: 80, height: 80),
               ),
             ),
 
-            // Main content
+            // Language selector — bottom-right, visible to visitors.
+            Positioned(
+              bottom: 24,
+              right: 24,
+              child: _LanguageSelector(
+                currentLocale: currentLocale,
+                ref: ref,
+              ),
+            ),
+
+            // Main content — centred.
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -124,10 +160,7 @@ class _LocaleButton extends StatelessWidget {
               ? theme.colorScheme.primary
               : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          border: Border.all(color: theme.colorScheme.primary, width: 2),
         ),
         child: Text(
           locale.languageCode.toUpperCase(),

@@ -281,8 +281,9 @@ class _PriceDialogState extends State<_PriceDialog> {
   }
 
   String _displayPrice() {
-    if (_euros.isEmpty)
+    if (_euros.isEmpty) {
       return '€${(widget.currentCents / 100).toStringAsFixed(2)}';
+    }
     return '€$_euros.00';
   }
 

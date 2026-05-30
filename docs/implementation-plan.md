@@ -36,10 +36,19 @@ Single source of truth for project status and roadmap. Update after completing m
 - [x] Idle timeout across all non-attract screens
 - [x] `TICKET_PRICE_CENTS` dart-define; single ticket type via l10n strings
 
-## Phase 3 — Android native
-- [ ] `AndroidManifest.xml` — kiosk manifest (HOME intent, singleTask, landscape, BT permissions)
-- [ ] `android/.../SumUpPlugin.kt` — platform channel, `charge` method only
-- [ ] `build.gradle` — SumUp AAR dependency (`com.sumup-merchant.api:android-sdk:4.2.0`)
+## Phase 3 — Android native ✅
+- [x] `AndroidManifest.xml` — singleTask, sensorLandscape, HOME+DEFAULT intent, showWhenLocked,
+      turnScreenOn, Bluetooth permissions (BLUETOOTH/ADMIN legacy + SCAN/CONNECT API31+,
+      ACCESS_FINE_LOCATION), INTERNET/ACCESS_NETWORK_STATE
+- [x] `SumUpPlugin.kt` — FlutterPlugin + ActivityAware + ActivityResultListener;
+      one permitted method (charge); affiliateKey via BuildConfig.SUMUP_AFFILIATE_KEY;
+      skips SumUp success/failure screens; maps all result codes to Dart contract
+- [x] `MainActivity.kt` — registers SumUpPlugin via configureFlutterEngine
+- [x] `android/app/build.gradle` — dart-define extraction → BuildConfig, minSdk=21,
+      SumUp SDK dependency, buildFeatures.buildConfig=true
+- [x] `android/build.gradle` — SumUp Maven repository added
+- [x] `attract_screen.dart` — fixed admin access: 5-tap hidden top-right 80×80px zone
+      (3s reset timer, no visual indicator); language selector moved to bottom-right
 
 ## Phase 4 — Backend integration
 - [ ] Backend sync: `GET /v1/ticket-types` → update local `TicketTypes` table
