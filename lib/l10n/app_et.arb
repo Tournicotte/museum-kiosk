@@ -1,0 +1,100 @@
+{
+  "@@locale": "et",
+
+  "touchToStart": "Puuduta ekraani piletite ostmiseks",
+  "@touchToStart": { "description": "Attract screen call to action" },
+
+  "selectTickets": "Vali piletid",
+  "@selectTickets": { "description": "Ticket selection screen title" },
+
+  "orderSummary": "Tellimuse kokkuvõte",
+  "@orderSummary": {},
+
+  "total": "Kokku",
+  "@total": {},
+
+  "payByCard": "Maksa kaardiga",
+  "@payByCard": {},
+
+  "cancel": "Tühista",
+  "@cancel": {},
+
+  "processingPayment": "Makse töötlemisel…",
+  "@processingPayment": {},
+
+  "doNotRemoveCard": "Ärge eemaldage kaarti",
+  "@doNotRemoveCard": {},
+
+  "paymentSuccessful": "Makse õnnestus!",
+  "@paymentSuccessful": {},
+
+  "receiptSent": "Kviitung on saadetud.",
+  "@receiptSent": {},
+
+  "returningIn": "Tagasi {seconds} sekundi pärast…",
+  "@returningIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+
+  "done": "Valmis",
+  "@done": {},
+
+  "paymentFailed": "Makse ebaõnnestus",
+  "@paymentFailed": {},
+
+  "tryAgain": "Proovi uuesti",
+  "@tryAgain": {},
+
+  "startAgain": "Alusta uuesti",
+  "@startAgain": {},
+
+  "ref": "Viitenr",
+  "@ref": {},
+
+  "adminTitle": "Haldus",
+  "@adminTitle": {},
+
+  "enterPin": "Sisesta PIN-kood",
+  "@enterPin": {},
+
+  "unlock": "Ava",
+  "@unlock": {},
+
+  "incorrectPin": "Vale PIN-kood",
+  "@incorrectPin": {},
+
+  "todaySales": "Tänased müügid",
+  "@todaySales": {},
+
+  "syncCatalog": "Uuenda piletikataloog",
+  "@syncCatalog": {},
+
+  "quantity": "Kogus",
+  "@quantity": {},
+
+  "ticketAdult": "Täiskasvanu",
+  "@ticketAdult": {},
+
+  "ticketAdultDesc": "Täishind, 18+",
+  "@ticketAdultDesc": {},
+
+  "ticketChild": "Laps",
+  "@ticketChild": {},
+
+  "ticketChildDesc": "Soodushind, 7–17",
+  "@ticketChildDesc": {},
+
+  "ticketFamily": "Pere",
+  "@ticketFamily": {},
+
+  "ticketFamilyDesc": "2 täiskasvanut + kuni 3 last",
+  "@ticketFamilyDesc": {},
+
+  "ticketSenior": "Senior / Üliõpilane",
+  "@ticketSenior": {},
+
+  "ticketSeniorDesc": "65+ või kehtiv üliõpilaspilet",
+  "@ticketSeniorDesc": {}
+}
