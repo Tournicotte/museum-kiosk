@@ -8,6 +8,7 @@ import 'package:museum_kiosk/core/database/database.dart';
 import 'package:museum_kiosk/core/widgets/idle_detector.dart';
 import 'package:museum_kiosk/features/admin/models/admin_state.dart';
 import 'package:museum_kiosk/features/admin/providers/admin_notifier.dart';
+import 'package:museum_kiosk/features/ticket_selection/providers/ticket_price_provider.dart';
 
 class AdminScreen extends ConsumerWidget {
   const AdminScreen({super.key});
@@ -187,12 +188,46 @@ class _DashboardView extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final salesAsync = ref.watch(todaySalesProvider);
+    final priceCents = ref.watch(ticketPriceProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Price control
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          child: Row(
+            children: [
+              Text(l10n.ticketPrice, style: theme.textTheme.titleMedium),
+              const SizedBox(width: 12),
+              Text(
+                _formatCents(priceCents),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => _PriceDialog(
+                    currentCents: ref.read(ticketPriceProvider),
+                    onConfirm: (cents) =>
+                        ref.read(ticketPriceProvider.notifier).setPrice(cents),
+                  ),
+                ),
+                icon: const Icon(Icons.edit, size: 18),
+                label: Text(l10n.changePrice),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 32),
+
+        // Sales summary
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Row(
             children: [
               Text(l10n.todaySales, style: theme.textTheme.titleLarge),
@@ -211,6 +246,80 @@ class _DashboardView extends ConsumerWidget {
                 const Center(child: Icon(Icons.error_outline, size: 48)),
             data: (orders) => _SalesList(orders: orders),
           ),
+        ),
+      ],
+    );
+  }
+
+  static String _formatCents(int cents) {
+    return NumberFormat.currency(symbol: '€', decimalDigits: 2)
+        .format(cents / 100.0);
+  }
+}
+
+class _PriceDialog extends StatefulWidget {
+  const _PriceDialog({required this.currentCents, required this.onConfirm});
+
+  final int currentCents;
+  final void Function(int cents) onConfirm;
+
+  @override
+  State<_PriceDialog> createState() => _PriceDialogState();
+}
+
+class _PriceDialogState extends State<_PriceDialog> {
+  String _euros = '';
+
+  void _onDigit(String d) {
+    if (_euros.length >= 3) return;
+    setState(() => _euros = _euros + d);
+  }
+
+  void _onDelete() {
+    if (_euros.isEmpty) return;
+    setState(() => _euros = _euros.substring(0, _euros.length - 1));
+  }
+
+  String _displayPrice() {
+    if (_euros.isEmpty)
+      return '€${(widget.currentCents / 100).toStringAsFixed(2)}';
+    return '€$_euros.00';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final canConfirm = _euros.isNotEmpty && (_euros != '0');
+
+    return AlertDialog(
+      title: Text(l10n.newPriceEuros),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _displayPrice(),
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _NumericKeypad(onDigit: _onDigit, onDelete: _onDelete),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: canConfirm
+              ? () {
+                  widget.onConfirm((int.parse(_euros)) * 100);
+                  Navigator.of(context).pop();
+                }
+              : null,
+          child: Text(l10n.done),
         ),
       ],
     );

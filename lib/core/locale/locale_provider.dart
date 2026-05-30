@@ -7,4 +7,5 @@ final localeProvider = StateProvider<Locale>((ref) => const Locale('et'));
 const supportedLocales = [
   Locale('et'), // Estonian — primary
   Locale('en'), // English
+  Locale('de'), // German
 ];

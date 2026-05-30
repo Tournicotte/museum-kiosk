@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:museum_kiosk/app/router.dart';
-import 'package:museum_kiosk/core/config/app_config.dart';
 import 'package:logging/logging.dart';
 import 'package:museum_kiosk/core/widgets/idle_detector.dart';
 import 'package:museum_kiosk/features/ticket_selection/providers/cart_provider.dart';
+import 'package:museum_kiosk/features/ticket_selection/providers/ticket_price_provider.dart';
 
 final _log = Logger('kiosk.ticket_selection');
 
@@ -17,9 +17,9 @@ class TicketSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final config = ref.watch(appConfigProvider);
+    final priceCents = ref.watch(ticketPriceProvider);
     final quantity = ref.watch(cartProvider);
-    final totalCents = config.ticketPriceCents * quantity;
+    final totalCents = priceCents * quantity;
     final theme = Theme.of(context);
 
     return IdleDetector(
@@ -114,7 +114,7 @@ class TicketSelectionScreen extends ConsumerWidget {
                       context: context,
                       ref: ref,
                       l10n: l10n,
-                      priceCents: config.ticketPriceCents,
+                      priceCents: priceCents,
                       totalCents: totalCents,
                       quantity: quantity,
                     ),

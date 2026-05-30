@@ -32,7 +32,7 @@ final class AppConfig {
         idleTimeoutSeconds:
             int.fromEnvironment('IDLE_TIMEOUT_SECONDS', defaultValue: 60),
         ticketPriceCents:
-            int.fromEnvironment('TICKET_PRICE_CENTS', defaultValue: 800),
+            int.fromEnvironment('TICKET_PRICE_CENTS', defaultValue: 400),
         logLevel: String.fromEnvironment('LOG_LEVEL', defaultValue: 'INFO'),
         backendUrl: String.fromEnvironment('BACKEND_URL',
             defaultValue: 'http://localhost:8000'),

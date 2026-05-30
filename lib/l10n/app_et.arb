@@ -80,6 +80,15 @@
   "ticketSingleDesc": "Üldine sissepääs",
   "@ticketSingleDesc": { "description": "Single ticket type description" },
 
+  "ticketPrice": "Piletihind",
+  "@ticketPrice": { "description": "Label for the ticket price in admin" },
+
+  "changePrice": "Muuda hinda",
+  "@changePrice": { "description": "Button to change the ticket price" },
+
+  "newPriceEuros": "Uus hind (€)",
+  "@newPriceEuros": { "description": "Dialog title for price entry" },
+
   "ticketAdult": "Täiskasvanu",
   "@ticketAdult": {},
 
