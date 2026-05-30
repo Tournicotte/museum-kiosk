@@ -35,7 +35,8 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
             android:showWhenLocked="true"
-            android:turnScreenOn="true">
+            android:turnScreenOn="true"
+            android:lockTaskMode="if_whitelisted">
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
@@ -56,6 +57,22 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- Device Owner receiver for kiosk lock-down.
+             After APK install: adb shell dpm set-device-owner ee.kaasan.museum_kiosk/.AdminReceiver
+             MainActivity.enableLockTaskIfDeviceOwner() then pins the app via setLockTaskPackages(). -->
+        <receiver
+            android:name=".AdminReceiver"
+            android:exported="true"
+            android:label="museum_kiosk"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Flutter embedding version — do not remove -->
         <meta-data

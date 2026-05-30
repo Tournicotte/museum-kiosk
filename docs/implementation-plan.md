@@ -68,18 +68,38 @@ Single source of truth for project status and roadmap. Update after completing m
 - [x] Admin dashboard: sync status row (last synced time, stale warning icon,
       "Syncing…" indicator, "Sync catalog" button); price resolves from async provider
 
-## Phase 5 — Hardening, deployment, and CI/CD
-- [ ] Tablet provisioning procedure documented in `.memspec/procedures/`
-- [ ] Device Owner lock-down (`AdminReceiver`, `setLockTaskPackages`)
-- [ ] Signing config for release APK (keystore, env secrets)
-- [ ] `flutter test` coverage for payment provider, cart provider, DB layer
+## Phase 5 — Hardening, deployment, and CI/CD ✅
 
-### CI/CD — Oracle Cloud Free Tier
-- [ ] GitHub Actions: `flutter analyze` + `flutter test` on every PR (free, public repo)
-- [ ] Oracle Cloud ARM VM (Ampere A1, always-free): self-hosted Actions runner for APK builds
-- [ ] Oracle Object Storage (always-free): store signed APK artifacts per build
-- [ ] Simple APK distribution endpoint: tablets pull latest from Object Storage URL
-- [ ] Provision Oracle VM: install Flutter, set up runner as systemd service
-- [ ] Secrets in GitHub: `KEYSTORE_BASE64`, `KEY_ALIAS`, `KEY_PASSWORD`, `SUMUP_AFFILIATE_KEY`, `ADMIN_PIN`
+### Tests (24 passing)
+- [x] `test/helpers/test_helpers.dart` — `testConfig`, `MockPaymentService`, `makeTestDb()`
+- [x] `test/core/database/database_test.dart` — order insert/update/status; ticket-type upsert/no-duplicate
+- [x] `test/core/payment/payment_notifier_test.dart` — success, success=false, Declined, Timeout,
+      Unavailable; DB row updated to paid/error correctly
+- [x] `test/features/ticket_selection/cart_provider_test.dart` — increment/decrement/floor;
+      checkout total, itemsJson snapshot, UUID v4 format
+- [x] `KioskDatabase.forTesting()` constructor using `NativeDatabase.memory()`
 
-**Note:** Codemagic is worth evaluating as alternative — generous Flutter-specific free tier, no infra to manage. Decision in `.memspec/decisions/ms_01KSVB6VL8N2ACRS9DBY3PEFT7.md`.
+### Signing & hardening
+- [x] `android/app/build.gradle` — env-var-driven keystore (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`,
+      `KEY_ALIAS`, `KEY_PASSWORD`); falls back to debug keystore locally; `minifyEnabled`,
+      `shrinkResources`, proguard enabled for release builds
+- [x] `android/app/proguard-rules.pro` — keep rules for SumUp SDK, Kotlin, Flutter, Drift
+
+### Device Owner lock-down
+- [x] `AdminReceiver.kt` — `DeviceAdminReceiver` subclass; activates via
+      `adb shell dpm set-device-owner ee.kaasan.museum_kiosk/.AdminReceiver`
+- [x] `res/xml/device_admin.xml` — device-admin policy declaration
+- [x] `AndroidManifest.xml` — `AdminReceiver` registered with `BIND_DEVICE_ADMIN` permission;
+      `android:lockTaskMode="if_whitelisted"` on the activity
+- [x] `MainActivity.kt` — `enableLockTaskIfDeviceOwner()` calls `setLockTaskPackages()` +
+      `startLockTask()` when Device Owner is active; no-op in development
+
+### CI/CD — GitHub Actions + Oracle Cloud Free Tier
+- [x] `.github/workflows/ci.yml` — quality gate on every push/PR: `flutter pub get`,
+      build_runner codegen check, `flutter analyze`, `flutter test`; GitHub-hosted ubuntu runner
+- [x] `.github/workflows/build.yml` — signed APK on push to main: decodes keystore from
+      `KEYSTORE_BASE64` secret, builds with all production dart-defines, uploads versioned +
+      `latest` APK to Oracle Object Storage; self-hosted `oracle-arm` runner; keystore wiped after
+- [x] `docs/tablet-provisioning.md` — keystore generation, GitHub Secrets table, Oracle Cloud
+      ARM VM provisioning steps, GitHub Actions runner registration, first install, Device Owner
+      activation, APK update procedure

@@ -1,0 +1,82 @@
+name: Build Release APK
+
+# Runs on every push to main (after CI passes) and can be triggered manually.
+# Requires a self-hosted Oracle Cloud ARM runner labelled 'oracle-arm'.
+# See docs/tablet-provisioning.md — "Oracle Cloud runner setup".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    name: Sign & upload APK
+    runs-on: [self-hosted, oracle-arm]
+    environment: production   # requires reviewer approval for protected branches
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Regenerate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Decode the base64-encoded keystore stored in GitHub Secrets.
+      - name: Decode release keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_PATH:     android/app/keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
+        run: |
+          flutter build apk \
+            --dart-define=ENV=production \
+            --dart-define=MUSEUM_NAME="${{ secrets.MUSEUM_NAME }}" \
+            --dart-define=SUMUP_AFFILIATE_KEY="${{ secrets.SUMUP_AFFILIATE_KEY }}" \
+            --dart-define=ADMIN_PIN="${{ secrets.ADMIN_PIN }}" \
+            --dart-define=KIOSK_ID="${{ secrets.KIOSK_ID }}" \
+            --dart-define=TICKET_PRICE_CENTS="${{ secrets.TICKET_PRICE_CENTS }}" \
+            --dart-define=BACKEND_URL="${{ secrets.BACKEND_URL }}"
+
+      - name: Upload to Oracle Object Storage
+        env:
+          OCI_CLI_USER:        ${{ secrets.OCI_USER_OCID }}
+          OCI_CLI_TENANCY:     ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_CLI_FINGERPRINT: ${{ secrets.OCI_KEY_FINGERPRINT }}
+          OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_CLI_REGION:      ${{ secrets.OCI_REGION }}
+        run: |
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          APK=build/app/outputs/flutter-apk/app-release.apk
+
+          # Versioned artifact — kept indefinitely for rollback.
+          oci os object put \
+            --bucket-name museum-kiosk-artifacts \
+            --name "releases/museum-kiosk-${COMMIT_SHA}.apk" \
+            --file "$APK" \
+            --force
+
+          # 'latest' alias — tablets always pull this URL.
+          oci os object put \
+            --bucket-name museum-kiosk-artifacts \
+            --name "releases/museum-kiosk-latest.apk" \
+            --file "$APK" \
+            --force
+
+          echo "APK uploaded: museum-kiosk-${COMMIT_SHA}.apk"
+
+      # Always remove the keystore — never leave it in the runner workspace.
+      - name: Remove keystore
+        if: always()
+        run: rm -f android/app/keystore.jks

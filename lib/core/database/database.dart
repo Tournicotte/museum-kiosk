@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 part 'database.g.dart';
@@ -36,6 +37,9 @@ class TicketTypes extends Table {
 @DriftDatabase(tables: [Orders, TicketTypes])
 class KioskDatabase extends _$KioskDatabase {
   KioskDatabase() : super(_openConnection());
+
+  // In-memory instance for unit tests — isolated, no file I/O.
+  KioskDatabase.forTesting() : super(NativeDatabase.memory());
 
   @override
   int get schemaVersion => 1;

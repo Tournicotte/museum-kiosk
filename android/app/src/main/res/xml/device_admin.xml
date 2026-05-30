@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Device admin policy declaration for AdminReceiver.
+  No specific policies required — Device Owner rights are granted via
+  'adb shell dpm set-device-owner', which is sufficient for setLockTaskPackages().
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies />
+</device-admin>

@@ -25,6 +25,10 @@ if (localPropertiesFile.exists()) {
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
 def flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
+// Signing: set KEYSTORE_PATH env var in CI (decoded from KEYSTORE_BASE64 secret).
+// Local / debug builds fall back to the debug keystore automatically.
+def keystorePath = System.getenv('KEYSTORE_PATH')
+
 android {
     namespace = "ee.kaasan.museum_kiosk"
     compileSdk = flutter.compileSdkVersion
@@ -37,6 +41,17 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePath) {
+                storeFile     file(keystorePath)
+                storePassword System.getenv('KEYSTORE_PASSWORD') ?: ''
+                keyAlias      System.getenv('KEY_ALIAS')         ?: ''
+                keyPassword   System.getenv('KEY_PASSWORD')      ?: ''
+            }
+        }
     }
 
     defaultConfig {
@@ -60,8 +75,12 @@ android {
 
     buildTypes {
         release {
-            // TODO: Replace with production signing config before shipping.
-            signingConfig = signingConfigs.debug
+            // Use the release keystore when KEYSTORE_PATH is set; debug otherwise.
+            signingConfig keystorePath ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                          'proguard-rules.pro'
         }
     }
 }
