@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:museum_kiosk/app/router.dart';
+import 'package:museum_kiosk/core/network/receipt_service.dart';
 
 class ConfirmationScreen extends ConsumerStatefulWidget {
   const ConfirmationScreen({
@@ -36,6 +37,10 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen> {
       } else {
         setState(() => _secondsLeft--);
       }
+    });
+    // Fire receipt webhook — best-effort, does not affect confirmation display.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(receiptServiceProvider).sendReceipt(orderId: widget.orderId);
     });
   }
 

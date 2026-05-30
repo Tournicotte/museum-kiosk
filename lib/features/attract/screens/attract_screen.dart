@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:museum_kiosk/app/router.dart';
 import 'package:museum_kiosk/core/config/app_config.dart';
 import 'package:museum_kiosk/core/locale/locale_provider.dart';
+import 'package:museum_kiosk/core/network/catalog_service.dart';
 
 class AttractScreen extends ConsumerStatefulWidget {
   const AttractScreen({super.key});
@@ -25,6 +26,17 @@ class _AttractScreenState extends ConsumerState<AttractScreen> {
   void dispose() {
     _tapResetTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Sync catalog on every attract-screen appearance.
+    // Best-effort: stale data shows until next successful sync.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(catalogSyncProvider.notifier);
+      if (notifier.isStale()) notifier.sync();
+    });
   }
 
   void _onHiddenTap() {

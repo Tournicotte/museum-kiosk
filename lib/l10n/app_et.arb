@@ -71,6 +71,22 @@
   "syncCatalog": "Uuenda piletikataloog",
   "@syncCatalog": {},
 
+  "lastSynced": "Sünkroniseeritud: {time}",
+  "@lastSynced": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+
+  "neverSynced": "Sünkroniseerimine puudub",
+  "@neverSynced": {},
+
+  "syncingNow": "Sünkroniseerimisel…",
+  "@syncingNow": {},
+
+  "syncStale": "Andmed võivad olla aegunud (>24h)",
+  "@syncStale": {},
+
   "quantity": "Kogus",
   "@quantity": {},
 

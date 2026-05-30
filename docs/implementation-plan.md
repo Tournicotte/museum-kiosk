@@ -50,11 +50,23 @@ Single source of truth for project status and roadmap. Update after completing m
 - [x] `attract_screen.dart` — fixed admin access: 5-tap hidden top-right 80×80px zone
       (3s reset timer, no visual indicator); language selector moved to bottom-right
 
-## Phase 4 — Backend integration
-- [ ] Backend sync: `GET /v1/ticket-types` → update local `TicketTypes` table
-- [ ] Receipt webhook: `POST /v1/orders/{id}/receipt` after confirmed payment
-- [ ] Offline fallback: serve cached ticket types if sync fails
-- [ ] Admin panel: show today's sales from local DB
+## Phase 4 — Backend integration ✅
+- [x] `lib/core/network/api_client.dart` — keepAlive Dio; 10s connect / 15s receive timeouts;
+      `X-Kiosk-Id` header from `KIOSK_ID` dart-define; request/response/error logging
+- [x] `lib/core/network/catalog_service.dart` — `CatalogSync` AsyncNotifier;
+      `GET /v1/ticket-types` → upsert `TicketTypes` table; DioException silently kept as
+      cached state; `isStale()` helper (>24h threshold); auto-triggered on attract screen
+      when stale, manually by admin "Sync catalog" button
+- [x] `lib/core/network/receipt_service.dart` — `ReceiptService.sendReceipt()`;
+      `POST /v1/orders/{id}/receipt`; best-effort (never throws, never blocks confirmation)
+- [x] `ticketPriceProvider` promoted to `AsyncNotifier<int>` — builds from Drift stream
+      on `TicketTypes` table; reactive to catalog sync writes; `_manualOverride` flag
+      preserves admin price changes; falls back to `TICKET_PRICE_CENTS` dart-define
+- [x] `AppConfig` gains `KIOSK_ID` dart-define (default `kiosk-01`)
+- [x] Confirmation screen fires receipt webhook on init (post-frame, non-blocking)
+- [x] Attract screen triggers stale-catalog sync on each appearance
+- [x] Admin dashboard: sync status row (last synced time, stale warning icon,
+      "Syncing…" indicator, "Sync catalog" button); price resolves from async provider
 
 ## Phase 5 — Hardening, deployment, and CI/CD
 - [ ] Tablet provisioning procedure documented in `.memspec/procedures/`

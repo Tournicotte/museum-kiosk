@@ -3,8 +3,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:museum_kiosk/app/router.dart';
 import 'package:logging/logging.dart';
+import 'package:museum_kiosk/app/router.dart';
+import 'package:museum_kiosk/core/config/app_config.dart';
 import 'package:museum_kiosk/core/widgets/idle_detector.dart';
 import 'package:museum_kiosk/features/ticket_selection/providers/cart_provider.dart';
 import 'package:museum_kiosk/features/ticket_selection/providers/ticket_price_provider.dart';
@@ -17,10 +18,14 @@ class TicketSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final priceCents = ref.watch(ticketPriceProvider);
+    final theme = Theme.of(context);
+
+    // Resolves from DB (via stream), falls back to dart-define while loading.
+    final priceCents = ref.watch(ticketPriceProvider).valueOrNull ??
+        ref.read(appConfigProvider).ticketPriceCents;
+
     final quantity = ref.watch(cartProvider);
     final totalCents = priceCents * quantity;
-    final theme = Theme.of(context);
 
     return IdleDetector(
       child: Scaffold(
@@ -70,7 +75,8 @@ class TicketSelectionScreen extends ConsumerWidget {
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 32),
+                                    horizontal: 32,
+                                  ),
                                   child: Text(
                                     '$quantity',
                                     style: theme.textTheme.displaySmall,
@@ -86,8 +92,10 @@ class TicketSelectionScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 32),
                             Text(
-                              _formatCents(totalCents,
-                                  Localizations.localeOf(context).toString()),
+                              _formatCents(
+                                totalCents,
+                                Localizations.localeOf(context).toString(),
+                              ),
                               style: theme.textTheme.headlineLarge?.copyWith(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -116,7 +124,6 @@ class TicketSelectionScreen extends ConsumerWidget {
                       l10n: l10n,
                       priceCents: priceCents,
                       totalCents: totalCents,
-                      quantity: quantity,
                     ),
                     icon: const Icon(Icons.credit_card),
                     label: Text(l10n.payByCard),
@@ -136,7 +143,6 @@ class TicketSelectionScreen extends ConsumerWidget {
     required AppLocalizations l10n,
     required int priceCents,
     required int totalCents,
-    required int quantity,
   }) async {
     try {
       final orderId = await ref.read(cartProvider.notifier).checkout(
@@ -155,12 +161,11 @@ class TicketSelectionScreen extends ConsumerWidget {
   }
 
   static String _formatCents(int cents, String locale) {
-    final amount = cents / 100.0;
     return NumberFormat.currency(
       locale: locale,
       symbol: '€',
       decimalDigits: 2,
-    ).format(amount);
+    ).format(cents / 100.0);
   }
 }
 

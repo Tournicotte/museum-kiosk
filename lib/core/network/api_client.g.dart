@@ -1,24 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ticket_price_provider.dart';
+part of 'api_client.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$ticketPriceHash() => r'651c324e71bbc2505ab9b7016aeabb66c9f7fe5a';
+String _$apiClientHash() => r'1159dd7c0f4496f27ba744e5605d14c04dd8d878';
 
-/// See also [TicketPrice].
-@ProviderFor(TicketPrice)
-final ticketPriceProvider = AsyncNotifierProvider<TicketPrice, int>.internal(
-  TicketPrice.new,
-  name: r'ticketPriceProvider',
+/// See also [apiClient].
+@ProviderFor(apiClient)
+final apiClientProvider = Provider<Dio>.internal(
+  apiClient,
+  name: r'apiClientProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$ticketPriceHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$apiClientHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$TicketPrice = AsyncNotifier<int>;
+typedef ApiClientRef = ProviderRef<Dio>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

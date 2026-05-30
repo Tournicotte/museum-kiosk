@@ -7,6 +7,8 @@ import 'package:museum_kiosk/app/router.dart';
 import 'package:museum_kiosk/core/database/database.dart';
 import 'package:museum_kiosk/core/widgets/idle_detector.dart';
 import 'package:museum_kiosk/features/admin/models/admin_state.dart';
+import 'package:museum_kiosk/core/config/app_config.dart';
+import 'package:museum_kiosk/core/network/catalog_service.dart';
 import 'package:museum_kiosk/features/admin/providers/admin_notifier.dart';
 import 'package:museum_kiosk/features/ticket_selection/providers/ticket_price_provider.dart';
 
@@ -188,12 +190,24 @@ class _DashboardView extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final salesAsync = ref.watch(todaySalesProvider);
-    final priceCents = ref.watch(ticketPriceProvider);
+    final syncState = ref.watch(catalogSyncProvider);
+    final config = ref.read(appConfigProvider);
+
+    // Resolve price: DB/stream value while available, config default as fallback.
+    final priceCents =
+        ref.watch(ticketPriceProvider).valueOrNull ?? config.ticketPriceCents;
+
+    final lastSynced = syncState.valueOrNull;
+    final isSyncing = syncState.isLoading;
+    final isStale = syncState.whenOrNull(
+          data: (t) => t == null || DateTime.now().difference(t).inHours >= 24,
+        ) ??
+        false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Price control
+        // ── Ticket price control ─────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
           child: Row(
@@ -212,7 +226,8 @@ class _DashboardView extends ConsumerWidget {
                 onPressed: () => showDialog<void>(
                   context: context,
                   builder: (_) => _PriceDialog(
-                    currentCents: ref.read(ticketPriceProvider),
+                    currentCents: ref.read(ticketPriceProvider).valueOrNull ??
+                        config.ticketPriceCents,
                     onConfirm: (cents) =>
                         ref.read(ticketPriceProvider.notifier).setPrice(cents),
                   ),
@@ -223,9 +238,59 @@ class _DashboardView extends ConsumerWidget {
             ],
           ),
         ),
-        const Divider(height: 32),
 
-        // Sales summary
+        // ── Catalog sync row ─────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          child: Row(
+            children: [
+              if (isSyncing)
+                Text(
+                  l10n.syncingNow,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withAlpha(160),
+                  ),
+                )
+              else if (lastSynced != null)
+                Text(
+                  l10n.lastSynced(
+                    DateFormat('dd.MM HH:mm').format(lastSynced),
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isStale
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurface.withAlpha(160),
+                  ),
+                )
+              else
+                Text(
+                  l10n.neverSynced,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              if (isStale && !isSyncing) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+              ],
+              const Spacer(),
+              TextButton.icon(
+                onPressed: isSyncing
+                    ? null
+                    : () => ref.read(catalogSyncProvider.notifier).sync(),
+                icon: const Icon(Icons.sync, size: 18),
+                label: Text(l10n.syncCatalog),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 28),
+
+        // ── Today's sales ────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Row(

@@ -10,6 +10,7 @@ final class AppConfig {
     required this.adminPin,
     required this.idleTimeoutSeconds,
     required this.ticketPriceCents,
+    required this.kioskId,
     required this.logLevel,
     required this.backendUrl,
   });
@@ -20,6 +21,7 @@ final class AppConfig {
   final String adminPin;
   final int idleTimeoutSeconds;
   final int ticketPriceCents;
+  final String kioskId;
   final String logLevel;
   final String backendUrl;
 
@@ -33,6 +35,7 @@ final class AppConfig {
             int.fromEnvironment('IDLE_TIMEOUT_SECONDS', defaultValue: 60),
         ticketPriceCents:
             int.fromEnvironment('TICKET_PRICE_CENTS', defaultValue: 400),
+        kioskId: String.fromEnvironment('KIOSK_ID', defaultValue: 'kiosk-01'),
         logLevel: String.fromEnvironment('LOG_LEVEL', defaultValue: 'INFO'),
         backendUrl: String.fromEnvironment('BACKEND_URL',
             defaultValue: 'http://localhost:8000'),
