@@ -1,0 +1,82 @@
+---
+description: Riverpod 2.x provider patterns and anti-patterns
+globs: "**/*.dart"
+alwaysApply: true
+---
+
+# Riverpod Patterns
+
+## Context
+- Apply when creating or modifying any Riverpod provider, notifier, or consumer widget.
+- All providers use `@riverpod` code generation (riverpod_annotation + riverpod_generator).
+
+## Requirements
+
+### Provider Creation
+- Annotate with `@riverpod` — never construct `Provider(...)`, `StateNotifierProvider(...)`, etc. manually.
+- Provider functions and classes go in `<feature>/providers/` files.
+- Each file must declare `part '<filename>.g.dart';` — the generated file.
+- Run `dart run build_runner build --delete-conflicting-outputs` after any provider change.
+
+### Notifiers
+- Use `AsyncNotifier<T>` for async state (loading/error/data). Use `Notifier<T>` for sync state.
+- State type `T` must be a `@freezed` immutable data class or a primitive — never a mutable object.
+- Initial state goes in `build()`. Side effects are `Future<void>` methods on the notifier.
+- Never expose the internal `state` setter publicly — mutations happen inside the notifier only.
+
+### Consumers
+- `ConsumerWidget` for widgets that only read providers (no `ref.listen` side effects).
+- `ConsumerStatefulWidget` when you need `initState`/`dispose` alongside Riverpod.
+- Call `ref.watch` for reactive rebuilds. Call `ref.read` inside callbacks (e.g., button `onPressed`).
+- **Never call `ref.watch` inside a callback** — it only works at build time.
+- **Never call `ref.read` at the top of `build()`** for reactive state — use `ref.watch`.
+
+### Error Handling
+- `AsyncValue.when(data: ..., loading: ..., error: ...)` — always handle all three cases.
+- Never let an unhandled `AsyncError` reach the widget tree silently.
+- Errors from providers must map to typed `AppError` subclasses — never expose raw exceptions to the UI.
+
+### Provider Overrides (for testing and dev)
+- Inject `StubPaymentService` in development by overriding the payment provider in `ProviderScope`.
+- Use `ProviderScope(overrides: [...])` in tests — never reach into providers via global state.
+
+### AppConfig Provider
+- `AppConfig` is created once in `main()` and passed to `KioskApp`. Override `appConfigProvider` in the root `ProviderScope`:
+  ```dart
+  ProviderScope(
+    overrides: [appConfigProvider.overrideWithValue(config)],
+    child: KioskApp(config: config),
+  )
+  ```
+
+## Examples
+
+<example>
+// Good: @riverpod, AsyncNotifier, typed state
+@riverpod
+class Payment extends _$Payment {
+  @override
+  AsyncValue<PaymentState> build(String orderId) => const AsyncData(PaymentIdle());
+
+  Future<void> startPayment() async {
+    state = const AsyncData(PaymentProcessing());
+    // ...
+  }
+}
+</example>
+
+<example type="invalid">
+// Bad: manual provider, mutable state, ref.read in build
+final paymentProvider = StateNotifierProvider<PaymentNotifier, PaymentState>(...);
+// Bad: ref.watch inside callback
+onPressed: () { ref.watch(cartProvider); }
+// Bad: ref.read at top of build for reactive state
+final cart = ref.read(cartProvider); // won't rebuild on change
+</example>
+
+## Critical Rules
+- NEVER construct providers manually — always use `@riverpod`.
+- NEVER call `ref.watch` inside callbacks.
+- NEVER call `ref.read` at top of `build()` for reactive state.
+- ALWAYS run build_runner after provider changes.
+- ALWAYS handle all three `AsyncValue` cases (data, loading, error).

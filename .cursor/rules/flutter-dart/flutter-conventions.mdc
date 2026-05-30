@@ -1,0 +1,86 @@
+---
+description: Flutter architecture conventions — feature-first, Riverpod, GoRouter
+globs: "**/*.dart"
+alwaysApply: true
+---
+
+# Flutter Conventions
+
+## Context
+- Apply when creating or modifying any Flutter widget, provider, or screen.
+- The app is a **single-flow kiosk** — not a general navigation app. Architecture reflects this.
+
+## Requirements
+
+### Feature Structure
+- `lib/features/<name>/` — each feature owns:
+  - `models/` — `@freezed` data classes
+  - `providers/` — `@riverpod` annotated notifiers and async providers
+  - `screens/` — `StatelessWidget` or `ConsumerWidget` screens; thin, no business logic
+- `lib/core/` — shared: `config/`, `logging/`, `errors/`, `database/`, `payment/`
+- `lib/app/` — `app.dart` (MaterialApp), `router.dart` (GoRouter), `theme.dart`
+
+### State Management
+- Riverpod 2.x with `@riverpod` code generation — no manual `Provider(...)` construction.
+- Providers in `<feature>/providers/` files, `part` of their `.g.dart` counterpart.
+- `AsyncNotifier` for async state with loading/error/data. `Notifier` for pure sync state.
+- State objects are `@freezed` — no mutable fields on state classes.
+- **No `setState` for business logic** — `setState` is only for local widget animation/visual state.
+- **No BuildContext across async gaps** — check `mounted` or use `ref.context` pattern.
+
+### Navigation
+- GoRouter only. Routes defined in `lib/app/router.dart`. Named via `KioskRoutes` constants.
+- **No `Navigator.push` or `Navigator.pop`** anywhere in feature code.
+- Kiosk flow: `Attract → TicketSelection → Payment/:orderId → Confirmation/:orderId → Attract`.
+- `Payment` and `Confirmation` have `PopScope(canPop: false)` — no back navigation.
+- Returning to Attract after confirmation uses `context.go(KioskRoutes.attract)` — full stack reset.
+
+### Widgets
+- Prefer `ConsumerWidget` over `StatefulWidget` when state is in Riverpod.
+- Keep `build()` methods under ~60 lines — extract sub-widgets when larger.
+- Large touch targets: minimum `Size(120, 64)` for interactive elements. Kiosk target: `Size(180, 72)`.
+- `const` constructors wherever possible — `prefer_const_constructors` is enforced.
+- No hardcoded colours or font sizes in widgets — use `Theme.of(context)` only.
+
+### Kiosk UX Rules
+- Every screen that is not `Attract` must implement idle timeout (reset to `Attract` after `AppConfig.idleTimeoutSeconds`).
+- `Payment` screen starts the SumUp charge immediately on `initState` post-frame callback — no extra tap needed.
+- `Confirmation` screen auto-returns to `Attract` after 15 seconds via `Timer`.
+- No keyboard shown to public users — all input is tap/button only. Admin PIN uses numeric keyboard only.
+
+## Examples
+
+<example>
+// Good: ConsumerWidget, GoRouter navigation, no business logic in build
+class ConfirmationScreen extends ConsumerWidget {
+  const ConfirmationScreen({super.key, required this.orderId});
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      body: Center(
+        child: FilledButton(
+          onPressed: () => context.go(KioskRoutes.attract),
+          child: const Text('Done'),
+        ),
+      ),
+    );
+  }
+}
+</example>
+
+<example type="invalid">
+// Bad: Navigator.push, setState for business logic, hardcoded size
+Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen()));
+setState(() { _isPaying = true; }); // business logic in widget
+SizedBox(height: 48, width: 200) // hardcoded, not from theme
+</example>
+
+## Critical Rules
+- NEVER use `Navigator.push` or `Navigator.pop` — use GoRouter.
+- NEVER put business logic in `build()` or `setState`.
+- NEVER hardcode colours, sizes, or fonts — use `Theme.of(context)`.
+- ALWAYS use `PopScope(canPop: false)` in Payment and Confirmation screens.
+- ALWAYS implement idle timeout on every screen except Attract.
+- ALWAYS use `const` constructors where possible.

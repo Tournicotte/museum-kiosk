@@ -1,0 +1,62 @@
+---
+description: Android kiosk mode rules — unattended public device constraints
+globs: "**/*.dart,**/*.kt,**/AndroidManifest.xml"
+alwaysApply: true
+---
+
+# Android Kiosk Rules
+
+## Context
+- This app runs on an unattended public tablet. The public must not be able to escape the app, access system settings, or interact with anything outside the ticket purchase flow.
+- Apply when touching navigation, system UI, screen management, or the Android manifest.
+
+## Requirements
+
+### System UI
+- `SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)` — called in `main()` before `runApp`. Must not be removed or conditionally disabled.
+- `WakelockPlus.enable()` — screen must never sleep while kiosk is running.
+- `SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])` — landscape only, no accidental portrait.
+
+### Navigation Lock
+- `PopScope(canPop: false)` is **mandatory** on `PaymentScreen` and `ConfirmationScreen`.
+- The public must not be able to back-navigate away from an in-progress payment.
+- After payment (success or failure), flow exits via `context.go(...)` — never `context.pop()`.
+
+### Idle Timeout
+- Every feature screen except `AttractScreen` must implement an idle reset timer.
+- Default: `AppConfig.idleTimeoutSeconds` (default 60s, configurable via `--dart-define`).
+- Timer cancels in `dispose()` — no leak.
+- Any user interaction (tap, scroll) resets the timer.
+- On timeout: `context.go(KioskRoutes.attract)` — full stack reset.
+
+### Admin Access
+- Admin panel accessed by 5-tap gesture on a hidden corner of the `AttractScreen` (top-right 80×80px area), then PIN entry.
+- The hidden area has no visual indicator — it is not discoverable by casual users.
+- PIN entry uses numeric keyboard only (`TextInputType.number`), `obscureText: true`.
+- Failed PIN attempts reset the input silently — no lockout counter shown (to avoid revealing the mechanism).
+
+### Android Manifest
+- `android:launchMode="singleTask"` — no duplicate activity stack.
+- `android:screenOrientation="sensorLandscape"` — enforced in manifest as well as Dart.
+- `HOME` + `DEFAULT` intent categories — app becomes the launcher on Device Owner setup.
+- `android:showWhenLocked="true"` + `android:turnScreenOn="true"` — kiosk works from lock screen.
+- SumUp Bluetooth permissions declared: `BLUETOOTH`, `BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, `ACCESS_FINE_LOCATION`.
+
+### Device Owner (Production)
+- Full lock-down via Device Owner: `adb shell dpm set-device-owner ee.kaasan.museum_kiosk/.AdminReceiver`
+- After enrolment, call `DevicePolicyManager.setLockTaskPackages()` — prevents home/recents escape.
+- This step runs on the tablet by an operator — not automated by the app.
+
+## Trust Framework Mapping (thesis §4.3)
+
+This kiosk operates at **L3 autonomy** (Monitored) for AI-assisted development:
+- **Observability:** All payment events logged with `orderId`. Every state transition written to DB.
+- **Reversibility:** Orders can be voided via admin panel. DB records are append-only audit trail.
+- **Blast Radius:** Payment is isolated behind `PaymentService`. Navigation is constrained. Admin is PIN-gated.
+
+## Critical Rules
+- NEVER remove `PopScope(canPop: false)` from Payment or Confirmation screens.
+- NEVER disable `immersiveSticky` or `WakelockPlus`.
+- ALWAYS cancel idle timers in `dispose()`.
+- ALWAYS use `context.go()` not `context.pop()` for post-payment navigation.
+- ALWAYS gate admin panel with both gesture + PIN.

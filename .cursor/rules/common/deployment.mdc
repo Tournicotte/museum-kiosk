@@ -1,0 +1,31 @@
+---
+description: Tablet deployments run via adb/MDM only — never improvised local-to-device pushes
+alwaysApply: true
+---
+
+# Deployment
+
+## Context
+- When building a release APK, flashing the tablet, applying DB migrations, or updating kiosk config.
+- When asked to "deploy", "ship", "release", "push to tablet", or "update the kiosk".
+
+## Requirements
+
+- **Release APKs are built locally and installed on the tablet via `adb install` or MDM.** Do not improvise other methods.
+- Local machines are for development and verification: running the app in the emulator/device for testing, running `flutter analyze`, `flutter test`, and local dev stack.
+- Schema changes are **Drift migration steps** applied on next app launch — never call `destroyEverything` outside a development reset. Migrations are code-reviewed like any other change.
+- Follow the recorded deploy procedure in `.memspec/` (`memspec search deploy`).
+- If a deploy is requested and the tablet is not available, stop and report — do not improvise.
+
+## Kiosk provisioning (first install)
+
+1. Enable developer options + USB debugging on tablet.
+2. `flutter build apk --dart-define=ENV=production ...`
+3. `adb install build/app/outputs/apk/release/app-release.apk`
+4. For full lock-down: `adb shell dpm set-device-owner ee.kaasan.museum_kiosk/.AdminReceiver`
+
+## Critical Rules
+- Never run migration scripts against a live tablet DB from a developer machine without explicit intent.
+- Never use `destroyEverything` or `drop table` outside a dev reset.
+- Local = develop, test, verify. Tablet = build APK, adb install, configure.
+- Use `.memspec/` deploy procedure — don't improvise.

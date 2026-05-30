@@ -1,0 +1,79 @@
+---
+description: Dart strict typing, code style, and quality standards
+globs: "**/*.dart"
+alwaysApply: true
+---
+
+# Dart Code Standards
+
+## Context
+- Apply to all `.dart` files in `lib/` and `test/`.
+- Mirrors the strictness of auto48's `mypy --strict` approach, expressed in Dart's analyser.
+
+## Requirements
+
+### Strict Analysis (enforced via `analysis_options.yaml`)
+- `strict-casts: true` — no implicit downcasts.
+- `strict-inference: true` — no inferred `dynamic` types.
+- `strict-raw-types: true` — no raw generic types.
+- `avoid_dynamic_calls: true` — no `.method()` on `dynamic`.
+- `missing_required_param: error`, `missing_return: error`, `invalid_assignment: error`.
+
+### Type Discipline
+- Type annotations on every public API: return types, parameters, fields.
+- No `dynamic` outside generated files (`*.g.dart`, `*.freezed.dart`).
+- Use `sealed` classes for exhaustive pattern matching (errors, states, results).
+- Prefer `final` fields and local variables — `prefer_final_fields`, `prefer_final_locals`.
+
+### Imports
+- `always_use_package_imports` — no relative imports anywhere.
+- `prefer_single_quotes` for strings.
+- Imports grouped: dart, flutter, packages, project (separated by blank lines).
+
+### Code Style
+- `dart format` is the formatter — run `dart format lib/ test/` before commits.
+- No `print()` anywhere — use `Logger('kiosk.<feature>')`.
+- No commented-out code — use git history.
+- Remove unused imports, fields, parameters.
+- Maximum one blank line between declarations.
+
+### Generated Files
+- `*.g.dart` and `*.freezed.dart` are generated — **never edit manually**.
+- Always commit generated files alongside the source that triggers them.
+- After any change to `@riverpod`, `@freezed`, or `@DriftDatabase` annotated code, run:
+  ```
+  dart run build_runner build --delete-conflicting-outputs
+  ```
+
+### Null Safety
+- Dart is null-safe throughout — no `!` (bang) operator without a clear documented reason.
+- Use `??` and `?.` appropriately. Avoid `late` except where lazily-initialised values are genuinely guaranteed (e.g., `initState`-set controllers).
+
+## Examples
+
+<example>
+// Good: typed, structured, package import
+import 'package:museum_kiosk/core/errors/app_error.dart';
+
+final class OrderRepository {
+  Future<Order> findById(String id) async { ... }
+}
+</example>
+
+<example type="invalid">
+// Bad: dynamic, relative import, print
+import '../errors/app_error.dart';
+
+findById(id) async {
+  print('finding $id');
+  dynamic result = await db.query(id);
+}
+</example>
+
+## Critical Rules
+- NEVER use `dynamic` outside generated files.
+- NEVER use `print()` — use Logger.
+- NEVER use relative imports.
+- ALWAYS run `dart run build_runner build` after annotated file changes.
+- ALWAYS run `dart format` before committing.
+- NEVER manually edit `*.g.dart` or `*.freezed.dart`.

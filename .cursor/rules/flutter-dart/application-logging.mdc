@@ -1,0 +1,79 @@
+---
+description: Structured application logging with Dart logging package
+globs: "**/*.dart"
+alwaysApply: true
+---
+
+# Application Logging (Flutter / Dart / logging package)
+
+## Context
+- Use when adding or changing **application and operational logs**.
+- The service uses the Dart `logging` package with a `Logger` hierarchy. Structured output is configured in `lib/core/logging/logger.dart`.
+- **Security and privacy for logs** (what must never appear): see `rules/common/security.mdc` — especially the payment security and secrets sections. This rule only describes *how* to apply those requirements with the Dart logger.
+
+## Requirements
+
+1. **Use `Logger('kiosk.<feature>')` per feature.** Never use bare `print()`.
+   ```dart
+   final _log = Logger('kiosk.payment');
+   ```
+
+2. **Structured events with keyword-style fields.** Prefer composing the message with key=value pairs — not interpolated user input:
+   ```dart
+   _log.info('charge_started orderId=$orderId amountCents=$amount');
+   // NOT: _log.info('Starting charge for order: ${userInput}');
+   ```
+
+3. **Log levels:**
+   - `FINE` / `FINER` — debug tracing, individual widget rebuilds (disabled in production).
+   - `INFO` — meaningful business events: order created, payment started, payment succeeded, screen transitions.
+   - `WARNING` — handled errors, degraded state: payment declined, catalog sync failed (fallback to cache), timeout.
+   - `SEVERE` — unexpected failures that should be investigated: unhandled exception, DB write failure.
+
+4. **Payment event logging (mandatory):**
+   - `INFO` on charge start: `orderId`, `amountCents`, `currency`.
+   - `INFO` on charge success: `orderId`, `transactionCode`.
+   - `WARNING` on decline: `orderId`, `sumupCode`, `detail`.
+   - `SEVERE` on unexpected error: `orderId`, error type (no card data).
+
+5. **Never log:** card data, PAN, CVV, admin PIN, raw user input, full order JSON that may contain PII.
+
+6. **Request/operation correlation:** every log line in a payment flow must include `orderId`. Bind it at the start of the operation:
+   ```dart
+   final log = Logger('kiosk.payment');
+   log.info('payment_flow_start orderId=$orderId');
+   ```
+
+7. **Background and timer operations** (idle timeout, catalog sync): log `INFO` for normal progress, `WARNING`/`SEVERE` for failures.
+
+8. **Exceptions:** use `log.severe('message', error, stackTrace)` — always include both `error` and `stackTrace` on `SEVERE` so operators can investigate.
+
+## Forbidden Data in Logs
+
+Following `rules/common/security.mdc`:
+- Card data, PAN, CVV, cardholder name.
+- Admin PIN or any authentication secret.
+- Raw user input that may contain PII.
+- Full serialised models — use IDs and counts only.
+
+## Examples
+
+```dart
+// Good: structured, parameterised event
+_log.info('order_created orderId=$orderId totalCents=$total items=${items.length}');
+
+// Good: exception with stack trace
+_log.severe('db_write_failed orderId=$orderId', error, stackTrace);
+
+// Bad: interpolated user input
+_log.info('User entered: $rawUserInput');
+
+// Bad: print
+print('payment done');
+```
+
+## Critical Rules
+- ALWAYS use `Logger('kiosk.<feature>')` — never `print()`.
+- ALWAYS include `orderId` in all payment log events.
+- ALWAYS pass `error` and `stackTrace` to `log.severe()`.
+- NEVER log card data, PAN, CVV, admin PIN, or PII.

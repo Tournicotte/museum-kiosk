@@ -1,0 +1,52 @@
+---
+description: Always consult and update persistent agent memory to prevent repeating mistakes
+globs: docs/agent-memory.md
+alwaysApply: true
+---
+
+# Must consult existing memory
+
+## MUST DO WITH EACH REQUEST
+
+- First action for each chat request should be to read @agent-memory.md
+- Last action for each chat should be to update @agent-memory.md if needed.
+
+## Objective
+
+Ensure the agent avoids repeating known mistakes by persistently logging corrections. All requests must reference stored knowledge in `docs/agent-memory.md`.
+
+## Rule: Learn from Mistakes
+
+On every mistake or deprecation warning:
+1. **Detect** incorrect or suboptimal output.
+2. **Correct** the mistake.
+3. **Save** both mistake and correction in @agent-memory.md:
+
+```markdown
+### Mistake: [Short Description]
+**Wrong**:
+[incorrect code or logic]
+
+**Correct**:
+[corrected code or logic]
+```
+
+## Rule: Prevent Repetition
+
+On every request:
+- Always **read @agent-memory.md** before applying logic.
+- If a related mistake is found, use the corrected approach.
+
+## Rule: Keep Memory Clean
+
+- Update existing sections when a better fix is found.
+- Only keep general, reusable information — not one-off file-specific details.
+- Information saved must be useful across future sessions.
+
+## Storage Path
+
+- `docs/agent-memory.md`: Persistent log of mistakes and their fixes
+
+## Enforcement
+
+- Failing to read or update memory after a mistake is a **critical error**.

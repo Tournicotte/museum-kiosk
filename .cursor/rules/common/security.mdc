@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+---
+
+# Security — Museum Kiosk
+
+## Context
+- Apply when writing or reviewing any code that handles payments, config, admin access, logging, or external data.
+- This is a **public-facing unattended device**. Threat model includes physical access, network interception, and malicious input from the public.
+
+## Requirements
+
+### Secrets and Config
+- All secrets (SumUp affiliate key, admin PIN, backend URL) via `--dart-define` at build time. **Never hardcoded in source.**
+- `AppConfig.fromEnvironment()` is the only place config is read — no module-level singletons, no external config files, no `.env` files shipped with the APK.
+- Secrets must never appear in log output, error messages, or DB records.
+
+### Payment Security
+- **Never log, store, or transmit card data, PAN, CVV, or cardholder name.** SumUp SDK owns all card data — the Flutter layer only receives a transaction code and success/failure.
+- Log payment events with `orderId`, `amountCents`, and outcome only.
+- The only permitted payment operation is `PaymentService.charge()`. No new platform-channel entry points to SumUp. See `sumup-payments.mdc`.
+
+### Admin Panel
+- Admin PIN compared using constant-time string comparison — never early-exit comparison that leaks timing.
+- Admin PIN **never logged**, never stored in plaintext in the DB or memory files.
+- Admin panel is read-only by default. No destructive operations (refunds, order deletion) in the UI — those require backend API calls with separate auth.
+
+### Input Handling
+- Ticket quantities are bounded integers — validate range before creating an order.
+- Order IDs are server-generated UUIDs — never constructed from user input.
+- Admin PIN input uses `obscureText: true`; no autofill or clipboard paste allowed.
+
+### Kiosk Physical Security
+- `PopScope(canPop: false)` on Payment and Confirmation screens prevents back-button escape.
+- System UI hidden (`immersiveSticky`) — status bar and nav bar not accessible to the public.
+- Device Owner mode (`dpm set-device-owner`) for production tablets prevents home/recents escape.
+- Admin access requires 5-tap hidden gesture + PIN — not discoverable by casual users.
+
+### Logging
+- Use `Logger('kiosk.<feature>')` — structured, keyword-style events.
+- Log format: `timestamp | LEVEL | logger | event key=value key=value`
+- **Forbidden in logs:** card data, PAN, admin PIN, raw user input, full order JSON with PII.
+- **Required in payment logs:** `orderId`, `amountCents`, `currency`, outcome, SumUp transaction code (on success).
+
+### Network
+- Backend sync uses HTTPS only. Certificate validation must not be disabled.
+- SumUp SDK manages its own encrypted channel — do not intercept or proxy.
+- No user-controlled data is ever sent as a URL query parameter.
+
+### Dependencies
+- Lock all dependency versions in `pubspec.lock` — commit it.
+- Never add a dependency for functionality that is trivially self-implementable.
+- Review pub.dev package health (likes, pub points, maintenance) before adding.
+
+## Critical Rules
+- NEVER hardcode secrets, affiliate keys, or PINs in source.
+- NEVER log card data, PAN, CVV, or admin PIN.
+- NEVER expose destructive operations in the kiosk UI.
+- NEVER disable certificate validation.
+- ALWAYS validate ticket quantities and order data at the service boundary.
+- ALWAYS use `PopScope(canPop: false)` in payment and confirmation flows.

@@ -1,0 +1,45 @@
+---
+alwaysApply: true
+---
+
+# Integration Standards
+
+## Context
+- Apply when the kiosk communicates with external systems: the backend API (ticket catalog sync, receipt webhooks) and the SumUp card reader (platform channel).
+- The kiosk must work **offline** — backend unavailability must degrade gracefully, never crash.
+
+## Requirements
+
+### Backend API
+- Resource-based URLs, kebab-case, versioned: `/v1/ticket-types`, `/v1/orders`.
+- Standard HTTP methods: GET (read), POST (create), PATCH (partial update).
+- Use `Dio` for HTTP. Set connect and receive timeouts — never block indefinitely.
+- Backend errors return structured JSON; parse into typed `AppError` subclasses — never expose raw HTTP bodies to the UI.
+- Include `X-Kiosk-Id` header on all requests (device identifier, not user PII).
+- All backend communication over HTTPS. Certificate validation must not be disabled.
+
+### SumUp Platform Channel
+- Channel name: `ee.kaasan.museum_kiosk/sumup`.
+- The only method exposed: `charge` — takes `orderId`, `amountCents`, `currency`, `title`.
+- Returns `{success: bool, transactionCode: String?, errorDetail: String?}`.
+- `PlatformException` codes: `TIMEOUT`, `UNAVAILABLE`, `DECLINED` — all mapped to typed `AppError` subclasses in `SumUpPaymentService`.
+- No other methods on this channel. Adding new channel methods requires explicit architectural review.
+
+### Offline Resilience
+- Ticket catalog is cached in `TicketTypes` table on last successful sync.
+- If sync fails, kiosk falls back to cached catalog — display `(cached)` indicator if sync age > 24h.
+- Orders are written to local `Orders` table immediately — they survive app restarts.
+- Receipts/webhooks to backend are best-effort with retry; failure must not block the confirmation screen.
+
+### Correlation
+- Every order has a UUID (`orderId`) generated at cart checkout.
+- All logs, DB records, and backend requests for an order reference the same `orderId`.
+- SumUp transaction code is stored alongside the order on success.
+
+## Critical Rules
+- NEVER make a blocking network call on the main isolate.
+- NEVER expose raw HTTP error bodies or stack traces to the kiosk UI — show friendly error messages only.
+- ALWAYS set timeouts on all outbound HTTP calls.
+- ALWAYS write order to local DB before initiating SumUp charge.
+- ALWAYS handle `PlatformException` from the SumUp channel as a typed `AppError`.
+- NEVER add new methods to the SumUp platform channel without review.

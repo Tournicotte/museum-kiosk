@@ -1,0 +1,80 @@
+---
+description: SumUp payment integration — Constrained Operation Selection pattern enforced
+globs: "**/*.dart,**/*.kt"
+alwaysApply: true
+---
+
+# SumUp Payments — Constrained Operation Selection
+
+## Context
+- Apply when touching any code related to payment: `PaymentService`, `SumUpPaymentService`, `SumUpPlugin.kt`, or any provider/widget that initiates or observes a charge.
+- This rule encodes the **Constrained Operation Selection Pattern** from the thesis (§4.X).
+
+## The Pattern (from thesis)
+
+> Instead of allowing arbitrary SDK calls (analogous to text-to-SQL), the LLM/agent selects from a predefined, finite operation set. Deterministic code validates and executes. This makes blast radius *auditable* and *bounded*.
+
+| Dimension | Free-form (forbidden) | Constrained (required) |
+|---|---|---|
+| **Observability** | Arbitrary calls, unknown audit trail | Every `charge` logs `orderId`, amount, outcome |
+| **Reversibility** | Unknown side effects | Read/write explicitly separated; orders are DB records |
+| **Blast Radius** | Unbounded | One operation, one channel, one Kotlin class |
+| **Autonomy** | Turing-complete action space | One permitted operation |
+
+**Amazon Kiro incident (Dec 2025):** Agent with full operator permissions chose "delete and recreate" production environment instead of applying an incremental fix — 13-hour outage. Root cause: the destructive action was reachable. The constrained operation pattern makes such actions *architecturally unreachable*.
+
+## Requirements
+
+### Dart side
+- `PaymentService` is an abstract interface. `SumUpPaymentService` is the only production implementation.
+- **Exactly one method:** `charge({orderId, amountCents, currency, title})`.
+- No direct MethodChannel calls from providers, notifiers, or widgets. All SumUp access goes through `PaymentService`.
+- `StubPaymentService` is used in development — injected via `ProviderScope` override in `main()`.
+- No new methods added to `PaymentService` without explicit architectural review and this rule updated.
+
+### Kotlin side (`SumUpPlugin.kt`)
+- Registers one MethodChannel: `ee.kaasan.museum_kiosk/sumup`.
+- Handles exactly one method: `charge`.
+- Returns: `{success: bool, transactionCode: String?, errorDetail: String?}`.
+- Any other method call returns a `PlatformException(code: "UNKNOWN_METHOD")`.
+- Never exposes SumUp session management, login, or settings to the Flutter layer.
+
+### Platform channel contract
+```
+Method:  charge
+Args:    {orderId: String, amountCents: int, currency: String, title: String}
+Returns: {success: bool, transactionCode: String?, errorDetail: String?}
+Errors:  PlatformException codes: TIMEOUT | UNAVAILABLE | DECLINED
+```
+
+### Error mapping (Dart)
+```
+PlatformException(TIMEOUT)      → PaymentTimeout
+PlatformException(UNAVAILABLE)  → PaymentHardwareUnavailable
+PlatformException(DECLINED)     → PaymentDeclined(sumupCode: e.code)
+PlatformException(*)            → PaymentDeclined(detail: e.message)
+```
+
+### Logging requirements
+Every `charge` call must log:
+- Before: `INFO charge_started orderId=$id amountCents=$amount currency=$currency`
+- Success: `INFO charge_succeeded orderId=$id transactionCode=$code`
+- Failure: `WARNING charge_failed orderId=$id sumupCode=$code detail=$detail`
+- Exception: `SEVERE charge_exception orderId=$id` with error + stackTrace
+
+**Never log:** amount in a way that reveals full card data context, PAN, CVV.
+
+### Allowed Operations List
+```dart
+// The complete set of permitted SumUp operations. Adding to this list requires
+// architectural review — see sumup-payments.mdc.
+static const _allowedOperations = {'charge'};
+```
+
+## Critical Rules
+- NEVER call MethodChannel directly from outside `SumUpPaymentService`.
+- NEVER add methods to `PaymentService` without updating this rule.
+- NEVER expose SumUp login, session, or settings to Flutter layer.
+- ALWAYS log the three required events (start, success/failure) for every charge.
+- ALWAYS map `PlatformException` to typed `AppError` — never propagate raw exceptions to UI.
+- ALWAYS use `StubPaymentService` in dev — never talk to real SumUp hardware in tests.

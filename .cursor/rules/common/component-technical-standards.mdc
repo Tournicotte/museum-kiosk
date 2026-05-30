@@ -1,0 +1,80 @@
+---
+alwaysApply: true
+---
+
+# Component Technical Standards
+
+## Context
+These standards apply to all Flutter/Dart code in this repository. They are designed to be enforced by AI assistants and code review.
+
+## Requirements
+
+### Architecture
+- Feature-first structure: `lib/features/<name>/`. Core cross-cutting concerns in `lib/core/`.
+- Each feature owns its models, providers, and screens. Core owns config, logging, errors, database, payment.
+- UI communicates with business logic only through Riverpod providers — never direct service calls from widgets.
+- `PaymentService` is the only access point for SumUp — see `sumup-payments.mdc`.
+
+### Code Quality
+- Source files must be UTF-8.
+- Code and comments in English.
+- Remove unused/dead code and commented-out blocks — rely on git history instead.
+- Lock all dependency versions via `pubspec.lock` (committed).
+- Never use deprecated Flutter/Dart APIs.
+
+### Database
+- Drift schema changes are **versioned migrations** — never `destroyEverything` in production.
+- Each table is owned by a single feature — no cross-feature direct table access.
+- Never expose raw `Database` instances to UI layer — use repositories.
+- The local SQLite DB is the offline resilience layer; write orders before any UI transition.
+
+### State and Storage
+- All state is immutable (`@freezed` data classes). Updates via `copyWith`.
+- No shared mutable globals. No `static` mutable fields.
+- `AppConfig` is constructed once in `main()` and injected via provider — never re-read from `String.fromEnvironment` outside `AppConfig`.
+
+### Performance
+- Payment flow must not block the UI thread — all payment operations are `async`.
+- Idle timeout is a `Timer` — cancel it in `dispose()`. Never leave timers running after widget disposal.
+- Images and assets are bundled in the APK — no runtime network fetches for UI assets.
+
+### Observability
+- Every payment state transition is logged with `orderId`.
+- Every order write to DB is logged before the UI advances.
+- Use structured log events: `logger.info('payment_started', orderId: id, amountCents: amt)` style comments in log strings.
+
+### Testing
+- Unit tests for providers and service logic in `test/`.
+- Use in-memory Drift DB for tests — never mock the database layer.
+- Use `mocktail` for mocking `PaymentService` in payment provider tests.
+- `flutter test` must pass before any commit.
+
+### Configuration
+- All runtime config via `--dart-define`. Never external config files. Never `.env` files.
+- Build for different environments by passing different `--dart-define` values — the APK is the artifact.
+
+## Examples
+
+<example>
+✅ Good: Provider injects PaymentService
+✅ Good: Order written to DB before navigating to Confirmation
+✅ Good: Timer cancelled in dispose()
+✅ Good: AppConfig injected via ProviderScope override in main()
+✅ Good: Logger('kiosk.payment').info('charge_started orderId=$id')
+</example>
+
+<example type="invalid">
+❌ Invalid: Direct SumUp SDK call from a widget
+❌ Invalid: Mutable static field for cart state
+❌ Invalid: String.fromEnvironment called outside AppConfig
+❌ Invalid: destroyEverything in migration path
+❌ Invalid: Timer left running after dispose()
+</example>
+
+## Critical Rules
+- NEVER access SumUp outside `PaymentService`.
+- NEVER use mutable statics for application state.
+- NEVER call `String.fromEnvironment` outside `AppConfig.fromEnvironment()`.
+- ALWAYS cancel timers in `dispose()`.
+- ALWAYS write order to DB before advancing UI state.
+- ALWAYS use `flutter analyze` and `flutter test` before committing.
