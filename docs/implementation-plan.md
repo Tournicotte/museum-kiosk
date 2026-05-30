@@ -46,9 +46,18 @@ Single source of truth for project status and roadmap. Update after completing m
 - [ ] Offline fallback: serve cached ticket types if sync fails
 - [ ] Admin panel: show today's sales from local DB
 
-## Phase 5 — Hardening and deployment
+## Phase 5 — Hardening, deployment, and CI/CD
 - [ ] Tablet provisioning procedure documented in `.memspec/procedures/`
 - [ ] Device Owner lock-down (`AdminReceiver`, `setLockTaskPackages`)
-- [ ] Signing config for release APK
+- [ ] Signing config for release APK (keystore, env secrets)
 - [ ] `flutter test` coverage for payment provider, cart provider, DB layer
-- [ ] CI workflow (lint + test on push)
+
+### CI/CD — Oracle Cloud Free Tier
+- [ ] GitHub Actions: `flutter analyze` + `flutter test` on every PR (free, public repo)
+- [ ] Oracle Cloud ARM VM (Ampere A1, always-free): self-hosted Actions runner for APK builds
+- [ ] Oracle Object Storage (always-free): store signed APK artifacts per build
+- [ ] Simple APK distribution endpoint: tablets pull latest from Object Storage URL
+- [ ] Provision Oracle VM: install Flutter, set up runner as systemd service
+- [ ] Secrets in GitHub: `KEYSTORE_BASE64`, `KEY_ALIAS`, `KEY_PASSWORD`, `SUMUP_AFFILIATE_KEY`, `ADMIN_PIN`
+
+**Note:** Codemagic is worth evaluating as alternative — generous Flutter-specific free tier, no infra to manage. Decision in `.memspec/decisions/ms_01KSVB6VL8N2ACRS9DBY3PEFT7.md`.
