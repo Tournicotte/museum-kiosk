@@ -9,6 +9,7 @@ final class AppConfig {
     required this.sumupAffiliateKey,
     required this.adminPin,
     required this.idleTimeoutSeconds,
+    required this.ticketPriceCents,
     required this.logLevel,
     required this.backendUrl,
   });
@@ -18,17 +19,23 @@ final class AppConfig {
   final String sumupAffiliateKey;
   final String adminPin;
   final int idleTimeoutSeconds;
+  final int ticketPriceCents;
   final String logLevel;
   final String backendUrl;
 
   factory AppConfig.fromEnvironment() => const AppConfig(
         environment: String.fromEnvironment('ENV', defaultValue: 'development'),
-        museumName: String.fromEnvironment('MUSEUM_NAME', defaultValue: 'Museum'),
+        museumName:
+            String.fromEnvironment('MUSEUM_NAME', defaultValue: 'Museum'),
         sumupAffiliateKey: String.fromEnvironment('SUMUP_AFFILIATE_KEY'),
         adminPin: String.fromEnvironment('ADMIN_PIN', defaultValue: '0000'),
-        idleTimeoutSeconds: int.fromEnvironment('IDLE_TIMEOUT_SECONDS', defaultValue: 60),
+        idleTimeoutSeconds:
+            int.fromEnvironment('IDLE_TIMEOUT_SECONDS', defaultValue: 60),
+        ticketPriceCents:
+            int.fromEnvironment('TICKET_PRICE_CENTS', defaultValue: 800),
         logLevel: String.fromEnvironment('LOG_LEVEL', defaultValue: 'INFO'),
-        backendUrl: String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8000'),
+        backendUrl: String.fromEnvironment('BACKEND_URL',
+            defaultValue: 'http://localhost:8000'),
       );
 
   bool get isProduction => environment == 'production';
@@ -37,5 +44,6 @@ final class AppConfig {
 
 // Overridden in main() — throws if accessed without override.
 final appConfigProvider = Provider<AppConfig>(
-  (ref) => throw UnimplementedError('appConfigProvider must be overridden in ProviderScope'),
+  (ref) => throw UnimplementedError(
+      'appConfigProvider must be overridden in ProviderScope'),
 );

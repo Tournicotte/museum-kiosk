@@ -39,7 +39,8 @@ final class SumUpPaymentService implements PaymentService {
     required String currency,
     required String title,
   }) async {
-    _log.info('charge_started orderId=$orderId amountCents=$amountCents currency=$currency');
+    _log.info(
+        'charge_started orderId=$orderId amountCents=$amountCents currency=$currency');
 
     try {
       final result = await _channel.invokeMapMethod<String, dynamic>('charge', {
@@ -53,9 +54,11 @@ final class SumUpPaymentService implements PaymentService {
 
       final success = result['success'] as bool? ?? false;
       if (success) {
-        _log.info('charge_succeeded orderId=$orderId transactionCode=${result['transactionCode']}');
+        _log.info(
+            'charge_succeeded orderId=$orderId transactionCode=${result['transactionCode']}');
       } else {
-        _log.warning('charge_failed orderId=$orderId detail=${result['errorDetail']}');
+        _log.warning(
+            'charge_failed orderId=$orderId detail=${result['errorDetail']}');
       }
 
       return PaymentResult(
@@ -87,7 +90,8 @@ final class StubPaymentService implements PaymentService {
   }) async {
     _log.info('stub_charge_started orderId=$orderId amountCents=$amountCents');
     await Future<void>.delayed(const Duration(seconds: 2));
-    _log.info('stub_charge_succeeded orderId=$orderId transactionCode=STUB-TXN-001');
+    _log.info(
+        'stub_charge_succeeded orderId=$orderId transactionCode=STUB-TXN-001');
     return const PaymentResult(success: true, transactionCode: 'STUB-TXN-001');
   }
 }

@@ -21,8 +21,14 @@ void setupLogging(String levelName) {
       ..write(' | ')
       ..write(r.message);
 
-    if (r.error != null) buf..write(' error=')..write(r.error);
-    if (r.stackTrace != null) buf..write('\n')..write(r.stackTrace);
+    if (r.error != null)
+      buf
+        ..write(' error=')
+        ..write(r.error);
+    if (r.stackTrace != null)
+      buf
+        ..write('\n')
+        ..write(r.stackTrace);
 
     // ignore: avoid_print
     print(buf.toString());

@@ -74,6 +74,12 @@
   "quantity": "Kogus",
   "@quantity": {},
 
+  "ticketSingle": "Muuseumi pilet",
+  "@ticketSingle": { "description": "Single ticket type name" },
+
+  "ticketSingleDesc": "Üldine sissepääs",
+  "@ticketSingleDesc": { "description": "Single ticket type description" },
+
   "ticketAdult": "Täiskasvanu",
   "@ticketAdult": {},
 

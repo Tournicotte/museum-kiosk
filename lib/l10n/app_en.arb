@@ -24,6 +24,8 @@
   "todaySales": "Today's sales",
   "syncCatalog": "Sync ticket catalog",
   "quantity": "Quantity",
+  "ticketSingle": "Museum ticket",
+  "ticketSingleDesc": "General admission",
   "ticketAdult": "Adult",
   "ticketAdultDesc": "Full price, age 18+",
   "ticketChild": "Child",

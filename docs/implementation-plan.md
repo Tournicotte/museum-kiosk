@@ -16,24 +16,25 @@ Single source of truth for project status and roadmap. Update after completing m
 - [x] `docs/agent-memory.md`, `docs/implementation-plan.md`
 - [x] `.mcp.json` — memspec MCP server
 
-## Phase 1 — Core infrastructure
-- [ ] `pubspec.yaml` — full dependency set (Riverpod, GoRouter, Drift, Freezed, logging, wakelock_plus)
-- [ ] `analysis_options.yaml` — strict analysis rules
-- [ ] `lib/core/config/app_config.dart` — `AppConfig.fromEnvironment()`
-- [ ] `lib/core/logging/logger.dart` — structured logger setup
-- [ ] `lib/core/errors/app_error.dart` — sealed `AppError` hierarchy
-- [ ] `lib/core/database/database.dart` — Drift schema (`Orders`, `TicketTypes`)
-- [ ] `lib/core/payment/sumup_payment_service.dart` — `PaymentService` interface + `SumUpPaymentService` + `StubPaymentService`
-- [ ] `lib/app/theme.dart` — kiosk theme (large touch targets, high contrast)
-- [ ] `lib/app/router.dart` — GoRouter with `KioskRoutes` constants
+## Phase 1 — Core infrastructure ✅
+- [x] `pubspec.yaml` — full dependency set (Riverpod, GoRouter, Drift, Freezed, logging, wakelock_plus)
+- [x] `analysis_options.yaml` — strict analysis rules
+- [x] `lib/core/config/app_config.dart` — `AppConfig.fromEnvironment()`
+- [x] `lib/core/logging/logger.dart` — structured logger setup
+- [x] `lib/core/errors/app_error.dart` — sealed `AppError` hierarchy
+- [x] `lib/core/database/database.dart` — Drift schema (`Orders`, `TicketTypes`)
+- [x] `lib/core/payment/payment_service.dart` — `PaymentService` interface + `SumUpPaymentService` + `StubPaymentService`
+- [x] `lib/app/theme.dart` — kiosk theme (large touch targets, high contrast)
+- [x] `lib/app/router.dart` — GoRouter with `KioskRoutes` constants
 
-## Phase 2 — Feature screens
-- [ ] `lib/features/attract/` — idle screen, hidden admin tap target
-- [ ] `lib/features/ticket_selection/` — catalog display, cart provider
-- [ ] `lib/features/payment/` — SumUp charge flow, `PopScope(canPop: false)`
-- [ ] `lib/features/confirmation/` — success receipt, 15s auto-return
-- [ ] `lib/features/admin/` — PIN gate, read-only sales summary, catalog sync trigger
-- [ ] Idle timeout across all non-attract screens
+## Phase 2 — Feature screens ✅
+- [x] `lib/features/attract/` — idle screen, language selector (ET default), long-press admin entry
+- [x] `lib/features/ticket_selection/` — single ticket type + quantity selector, cart provider, DB order creation
+- [x] `lib/features/payment/` — SumUp charge flow, `PopScope(canPop: false)`, retry on failure
+- [x] `lib/features/confirmation/` — success receipt, 15s auto-return timer
+- [x] `lib/features/admin/` — PIN gate (constant-time compare), today's sales dashboard
+- [x] Idle timeout across all non-attract screens
+- [x] `TICKET_PRICE_CENTS` dart-define; single ticket type via l10n strings
 
 ## Phase 3 — Android native
 - [ ] `AndroidManifest.xml` — kiosk manifest (HOME intent, singleTask, landscape, BT permissions)

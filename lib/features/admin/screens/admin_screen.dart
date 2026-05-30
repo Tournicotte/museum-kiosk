@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:museum_kiosk/app/router.dart';
+import 'package:museum_kiosk/core/database/database.dart';
+import 'package:museum_kiosk/core/widgets/idle_detector.dart';
+import 'package:museum_kiosk/features/admin/models/admin_state.dart';
+import 'package:museum_kiosk/features/admin/providers/admin_notifier.dart';
+
+class AdminScreen extends ConsumerWidget {
+  const AdminScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final adminState = ref.watch(adminProvider);
+    final l10n = AppLocalizations.of(context);
+
+    return IdleDetector(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.adminTitle),
+          automaticallyImplyLeading: false,
+          actions: [
+            if (adminState is AdminUnlocked)
+              IconButton(
+                icon: const Icon(Icons.lock_outline),
+                onPressed: () => ref.read(adminProvider.notifier).lock(),
+              ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => context.go(KioskRoutes.attract),
+            ),
+          ],
+        ),
+        body: switch (adminState) {
+          AdminLocked(errorKey: final errorKey) =>
+            _PinEntryView(errorKey: errorKey),
+          AdminUnlocked() => const _DashboardView(),
+        },
+      ),
+    );
+  }
+}
+
+class _PinEntryView extends ConsumerStatefulWidget {
+  const _PinEntryView({this.errorKey});
+
+  final String? errorKey;
+
+  @override
+  ConsumerState<_PinEntryView> createState() => _PinEntryViewState();
+}
+
+class _PinEntryViewState extends ConsumerState<_PinEntryView> {
+  static const _pinLength = 4;
+
+  String _pin = '';
+
+  void _onDigit(String digit) {
+    if (_pin.length >= _pinLength) return;
+    setState(() => _pin = _pin + digit);
+    if (_pin.length == _pinLength) {
+      ref.read(adminProvider.notifier).submitPin(_pin);
+      setState(() => _pin = '');
+    }
+  }
+
+  void _onDelete() {
+    if (_pin.isEmpty) return;
+    setState(() => _pin = _pin.substring(0, _pin.length - 1));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.enterPin, style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 32),
+
+              // PIN dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _pinLength,
+                  (i) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i < _pin.length
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface.withAlpha(60),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              if (widget.errorKey != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.incorrectPin,
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.error),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // Numeric keypad
+              _NumericKeypad(onDigit: _onDigit, onDelete: _onDelete),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NumericKeypad extends StatelessWidget {
+  const _NumericKeypad({required this.onDigit, required this.onDelete});
+
+  final void Function(String) onDigit;
+  final VoidCallback onDelete;
+
+  static const _rows = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['', '0', 'del'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: _rows.map((row) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: row.map((key) {
+            if (key.isEmpty) return const SizedBox(width: 80, height: 80);
+            return Padding(
+              padding: const EdgeInsets.all(6),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: FilledButton(
+                  onPressed: key == 'del' ? onDelete : () => onDigit(key),
+                  style: FilledButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: key == 'del'
+                      ? const Icon(Icons.backspace_outlined, size: 28)
+                      : Text(
+                          key,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _DashboardView extends ConsumerWidget {
+  const _DashboardView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final salesAsync = ref.watch(todaySalesProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          child: Row(
+            children: [
+              Text(l10n.todaySales, style: theme.textTheme.titleLarge),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => ref.invalidate(todaySalesProvider),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: salesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) =>
+                const Center(child: Icon(Icons.error_outline, size: 48)),
+            data: (orders) => _SalesList(orders: orders),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SalesList extends StatelessWidget {
+  const _SalesList({required this.orders});
+
+  final List<Order> orders;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (orders.isEmpty) {
+      return Center(
+        child: Text(
+          '—',
+          style: theme.textTheme.displaySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withAlpha(100),
+          ),
+        ),
+      );
+    }
+
+    final totalCents = orders.fold<int>(0, (sum, o) => sum + o.totalCents);
+    final totalFormatted = _formatCents(totalCents);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Row(
+            children: [
+              Text(
+                '${orders.length} kv',
+                style: theme.textTheme.bodyLarge,
+              ),
+              const Spacer(),
+              Text(
+                totalFormatted,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            itemCount: orders.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (_, i) {
+              final order = orders[i];
+              final time = DateFormat('HH:mm').format(order.createdAt);
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(time, style: theme.textTheme.bodyMedium),
+                trailing: Text(
+                  _formatCents(order.totalCents),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _formatCents(int cents) {
+    return NumberFormat.currency(symbol: '€', decimalDigits: 2)
+        .format(cents / 100.0);
+  }
+}
