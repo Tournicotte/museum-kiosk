@@ -93,7 +93,7 @@
   "ticketSingle": "Muuseumi pilet",
   "@ticketSingle": { "description": "Single ticket type name" },
 
-  "ticketSingleDesc": "Üldine sissepääs",
+  "ticketSingleDesc": "Sissepääs",
   "@ticketSingleDesc": { "description": "Single ticket type description" },
 
   "ticketPrice": "Piletihind",

@@ -28,7 +28,7 @@ ThemeData kioskTheme() {
         textStyle: const TextStyle(fontSize: 20),
       ),
     ),
-    cardTheme: const CardTheme(
+    cardTheme: const CardThemeData(
       margin: EdgeInsets.zero,
     ),
     textTheme: const TextTheme(

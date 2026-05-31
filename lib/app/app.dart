@@ -5,7 +5,7 @@ import 'package:museum_kiosk/app/router.dart';
 import 'package:museum_kiosk/app/theme.dart';
 import 'package:museum_kiosk/core/config/app_config.dart';
 import 'package:museum_kiosk/core/locale/locale_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:museum_kiosk/l10n/app_localizations.dart';
 
 class KioskApp extends ConsumerWidget {
   const KioskApp({super.key});

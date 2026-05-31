@@ -37,7 +37,7 @@ dependencies:
 
   # Utilities
   uuid: ^4.4.0
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # Kiosk — keep screen on, hide system UI
   wakelock_plus: ^1.2.5

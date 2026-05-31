@@ -28,7 +28,7 @@ final class AppConfig {
   factory AppConfig.fromEnvironment() => const AppConfig(
         environment: String.fromEnvironment('ENV', defaultValue: 'development'),
         museumName:
-            String.fromEnvironment('MUSEUM_NAME', defaultValue: 'Museum'),
+            String.fromEnvironment('MUSEUM_NAME', defaultValue: 'Eppingi torn'),
         sumupAffiliateKey: String.fromEnvironment('SUMUP_AFFILIATE_KEY'),
         adminPin: String.fromEnvironment('ADMIN_PIN', defaultValue: '0000'),
         idleTimeoutSeconds:

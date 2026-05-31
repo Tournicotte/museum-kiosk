@@ -29,7 +29,7 @@
   "syncStale": "Data may be outdated (>24 h)",
   "quantity": "Quantity",
   "ticketSingle": "Museum ticket",
-  "ticketSingleDesc": "General admission",
+  "ticketSingleDesc": "Entry",
   "ticketPrice": "Ticket price",
   "changePrice": "Change price",
   "newPriceEuros": "New price (€)",
