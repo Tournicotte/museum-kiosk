@@ -1,8 +1,8 @@
 {
   "@@locale": "de",
 
+  "museumDisplayName": "Eppingi Turm",
   "touchToStart": "Bildschirm berühren, um Tickets zu kaufen",
-  "selectTickets": "Tickets auswählen",
   "orderSummary": "Bestellübersicht",
   "total": "Gesamt",
   "payByCard": "Mit Karte bezahlen",
@@ -16,7 +16,6 @@
   "paymentFailed": "Zahlung fehlgeschlagen",
   "tryAgain": "Erneut versuchen",
   "startAgain": "Neu starten",
-  "ref": "Ref",
   "adminTitle": "Verwaltung",
   "enterPin": "PIN eingeben",
   "unlock": "Entsperren",

@@ -29,10 +29,6 @@ class TicketSelectionScreen extends ConsumerWidget {
 
     return IdleDetector(
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.selectTickets),
-          automaticallyImplyLeading: false,
-        ),
         body: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(

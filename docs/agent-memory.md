@@ -49,3 +49,19 @@ Filter in Dart after a simpler DB query, or add `import 'package:drift/drift.dar
 final allPaid = await (db.select(db.orders)..where((t) => t.status.equals('paid'))).get();
 return allPaid.where((o) => !o.createdAt.isBefore(startOfDay)).toList();
 ```
+
+### Mistake: leaving orphaned l10n keys after removing the widget that used them
+
+**Wrong**:
+Removing a `Text(l10n.foo)` (e.g. an AppBar title or a transaction-ref line) but leaving
+`"foo"` in `lib/l10n/app_*.arb`. Neither `flutter gen-l10n` nor `flutter analyze` flags an
+unused ARB key, and `analyze` will not flag stale getters in the generated `app_localizations*.dart`
+either — so the dead string silently survives.
+
+**Correct**:
+When you delete the last usage of an l10n key, also delete it from **all** locale `.arb` files
+(including any `@key` metadata block in the template `app_et.arb`), then run `flutter gen-l10n`
+to refresh the generated getters. Confirm with:
+`grep -rn "l10n\.<key>" lib --include='*.dart' | grep -v lib/l10n` → expect zero hits.
+Same principle for now-unused constructor params plumbed through GoRouter `extra`: remove the
+param, the router's `extra` extraction, and the `context.go(..., extra: ...)` call together.

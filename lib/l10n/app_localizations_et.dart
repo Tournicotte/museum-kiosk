@@ -9,10 +9,10 @@ class AppLocalizationsEt extends AppLocalizations {
   AppLocalizationsEt([String locale = 'et']) : super(locale);
 
   @override
-  String get touchToStart => 'Puuduta ekraani piletite ostmiseks';
+  String get museumDisplayName => 'Eppingi torn';
 
   @override
-  String get selectTickets => 'Vali piletid';
+  String get touchToStart => 'Puuduta ekraani piletite ostmiseks';
 
   @override
   String get orderSummary => 'Tellimuse kokkuvõte';
@@ -54,9 +54,6 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get startAgain => 'Alusta uuesti';
-
-  @override
-  String get ref => 'Viitenr';
 
   @override
   String get adminTitle => 'Haldus';

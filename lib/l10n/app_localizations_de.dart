@@ -9,10 +9,10 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get touchToStart => 'Bildschirm berühren, um Tickets zu kaufen';
+  String get museumDisplayName => 'Eppingi Turm';
 
   @override
-  String get selectTickets => 'Tickets auswählen';
+  String get touchToStart => 'Bildschirm berühren, um Tickets zu kaufen';
 
   @override
   String get orderSummary => 'Bestellübersicht';
@@ -54,9 +54,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get startAgain => 'Neu starten';
-
-  @override
-  String get ref => 'Ref';
 
   @override
   String get adminTitle => 'Verwaltung';

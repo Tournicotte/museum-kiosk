@@ -39,12 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: KioskRoutes.confirmation,
         builder: (_, state) {
           final orderId = state.pathParameters['orderId']!;
-          final extra = state.extra as Map<String, Object?>?;
-          final transactionCode = extra?['transactionCode'] as String?;
-          return ConfirmationScreen(
-            orderId: orderId,
-            transactionCode: transactionCode,
-          );
+          return ConfirmationScreen(orderId: orderId);
         },
       ),
       GoRoute(

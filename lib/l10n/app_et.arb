@@ -1,11 +1,11 @@
 {
   "@@locale": "et",
 
+  "museumDisplayName": "Eppingi torn",
+  "@museumDisplayName": { "description": "Museum display name on attract screen" },
+
   "touchToStart": "Puuduta ekraani piletite ostmiseks",
   "@touchToStart": { "description": "Attract screen call to action" },
-
-  "selectTickets": "Vali piletid",
-  "@selectTickets": { "description": "Ticket selection screen title" },
 
   "orderSummary": "Tellimuse kokkuvõte",
   "@orderSummary": {},
@@ -49,9 +49,6 @@
 
   "startAgain": "Alusta uuesti",
   "@startAgain": {},
-
-  "ref": "Viitenr",
-  "@ref": {},
 
   "adminTitle": "Haldus",
   "@adminTitle": {},

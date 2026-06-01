@@ -291,18 +291,12 @@ class _DashboardView extends ConsumerWidget {
         const Divider(height: 28),
 
         // ── Today's sales ────────────────────────────────────────────────
+        // No manual refresh here: todaySales is re-queried every time the
+        // admin panel is opened, and no sale can occur while it is open
+        // (single-screen kiosk). "Sync catalog" above is the only refresh.
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-          child: Row(
-            children: [
-              Text(l10n.todaySales, style: theme.textTheme.titleLarge),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () => ref.invalidate(todaySalesProvider),
-              ),
-            ],
-          ),
+          child: Text(l10n.todaySales, style: theme.textTheme.titleLarge),
         ),
         Expanded(
           child: salesAsync.when(

@@ -1,8 +1,8 @@
 {
   "@@locale": "en",
 
+  "museumDisplayName": "Epping Tower",
   "touchToStart": "Touch screen to buy tickets",
-  "selectTickets": "Select Tickets",
   "orderSummary": "Order Summary",
   "total": "Total",
   "payByCard": "Pay by Card",
@@ -16,7 +16,6 @@
   "paymentFailed": "Payment unsuccessful",
   "tryAgain": "Try again",
   "startAgain": "Start again",
-  "ref": "Ref",
   "adminTitle": "Admin",
   "enterPin": "Enter admin PIN",
   "unlock": "Unlock",

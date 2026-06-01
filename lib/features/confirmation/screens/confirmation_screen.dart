@@ -11,11 +11,9 @@ class ConfirmationScreen extends ConsumerStatefulWidget {
   const ConfirmationScreen({
     super.key,
     required this.orderId,
-    this.transactionCode,
   });
 
   final String orderId;
-  final String? transactionCode;
 
   @override
   ConsumerState<ConfirmationScreen> createState() => _ConfirmationScreenState();
@@ -82,16 +80,6 @@ class _ConfirmationScreenState extends ConsumerState<ConfirmationScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                if (widget.transactionCode != null) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    '${l10n.ref}: ${widget.transactionCode}',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(180),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
                 const SizedBox(height: 48),
                 Text(
                   l10n.returningIn(_secondsLeft),

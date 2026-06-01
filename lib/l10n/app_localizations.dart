@@ -100,17 +100,17 @@ abstract class AppLocalizations {
     Locale('et')
   ];
 
+  /// Museum display name on attract screen
+  ///
+  /// In et, this message translates to:
+  /// **'Eppingi torn'**
+  String get museumDisplayName;
+
   /// Attract screen call to action
   ///
   /// In et, this message translates to:
   /// **'Puuduta ekraani piletite ostmiseks'**
   String get touchToStart;
-
-  /// Ticket selection screen title
-  ///
-  /// In et, this message translates to:
-  /// **'Vali piletid'**
-  String get selectTickets;
 
   /// No description provided for @orderSummary.
   ///
@@ -189,12 +189,6 @@ abstract class AppLocalizations {
   /// In et, this message translates to:
   /// **'Alusta uuesti'**
   String get startAgain;
-
-  /// No description provided for @ref.
-  ///
-  /// In et, this message translates to:
-  /// **'Viitenr'**
-  String get ref;
 
   /// No description provided for @adminTitle.
   ///

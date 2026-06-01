@@ -103,3 +103,23 @@ Single source of truth for project status and roadmap. Update after completing m
 - [x] `docs/tablet-provisioning.md` — keystore generation, GitHub Secrets table, Oracle Cloud
       ARM VM provisioning steps, GitHub Actions runner registration, first install, Device Owner
       activation, APK update procedure
+
+## Phase 6 — UI hardening & polish ✅
+- [x] Attract screen: pure-black background; OLED burn-in drift is now **idle-gated** —
+      content only drifts after 3 min untouched (`_idleBeforeDrift`), and any touch
+      (`Listener.onPointerDown`) recentres it immediately, so it never moves while a visitor
+      interacts (e.g. switching language). Amplitude reduced to ±6 px X / ±4 px Y, 45 s cycle,
+      resting at the origin (sin/sin Lissajous)
+- [x] Attract screen: enlarged the "touch to start" text (headlineMedium) and the language
+      buttons (h28/v18 padding, titleLarge), language selector at 0.8 opacity for tappability
+- [x] Attract screen shows localized `l10n.museumDisplayName` (ET/EN/DE) instead of the
+      `MUSEUM_NAME` dart-define; the dart-define value remains the MaterialApp title + log field
+- [x] Admin: removed the redundant "Today's sales" refresh icon — `todaySalesProvider` is
+      re-queried on every admin entry and no sale can occur while the panel is open, so the only
+      meaningful refresh is "Sync catalog" (pulls ticket types/price from the backend)
+- [x] Ticket selection: removed AppBar (card already carries the heading) for a cleaner kiosk look
+- [x] Confirmation: removed the SumUp transaction-ref line shown to visitors (the code is still
+      persisted in `Orders.sumupTransactionCode` and sent via the receipt webhook)
+- [x] Dead-code cleanup from the above: dropped orphaned l10n keys `selectTickets` and `ref`,
+      and the now-unused `transactionCode` param plumbed Payment → router → Confirmation
+      (regenerated l10n; analyze clean; format clean; 24 tests pass)

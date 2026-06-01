@@ -41,10 +41,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     ref.listen(paymentProvider(widget.orderId), (_, next) {
       if (next is PaymentSuccess) {
-        context.go(
-          KioskRoutes.confirmationFor(widget.orderId),
-          extra: <String, Object?>{'transactionCode': next.transactionCode},
-        );
+        context.go(KioskRoutes.confirmationFor(widget.orderId));
       }
     });
 
