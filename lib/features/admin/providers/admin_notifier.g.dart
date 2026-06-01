@@ -6,7 +6,7 @@ part of 'admin_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$todaySalesHash() => r'6bacf4ebad8c4851706ccc50bcd8fa6acd7d53b8';
+String _$todaySalesHash() => r'45bcc99be6ce624f05932e4ff9b006286fb37754';
 
 /// See also [todaySales].
 @ProviderFor(todaySales)

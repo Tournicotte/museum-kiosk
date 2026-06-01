@@ -1,6 +1,5 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -37,10 +36,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = "11"
     }
 
     signingConfigs {
@@ -90,7 +85,9 @@ flutter {
 }
 
 dependencies {
-    // SumUp in-app payments SDK.
-    // Repository declared in android/build.gradle (maven.sumup.com).
-    implementation 'com.sumup-merchant.api:android-sdk:4.2.0'
+    // SumUp in-app payments SDK — release builds only.
+    // Debug builds use StubPaymentService (no card reader needed on emulator).
+    // src/debug/kotlin/.../SumUpPlugin.kt is a no-op stub for debug.
+    // src/release/kotlin/.../SumUpPlugin.kt is the real implementation.
+    releaseImplementation 'com.sumup-merchant.api:android-sdk:4.2.0'
 }
